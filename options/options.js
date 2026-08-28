@@ -1,5 +1,5 @@
 (async function () {
-  const DEFAULTS = { apiKey: "", model: "claude-sonnet-5", autoIntervalSeconds: 45, autoScreenshots: true, aiEnabled: true };
+  const DEFAULTS = { apiKey: "", model: "gemini-2.5-flash", autoIntervalSeconds: 45, autoScreenshots: true, aiEnabled: true };
 
   const apiKeyInput = document.getElementById("apiKey");
   const modelSelect = document.getElementById("model");

@@ -1,9 +1,9 @@
-// Service worker: the only place that talks to the Anthropic API, so the
+// Service worker: the only place that talks to the Gemini API, so the
 // API key never has to be duplicated into content-script code and stays
 // out of the page context YouTube controls.
 
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const DEFAULT_MODEL = "claude-sonnet-5";
+const GEMINI_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+const DEFAULT_MODEL = "gemini-2.5-flash";
 
 async function getSettings() {
   const { settings } = await chrome.storage.local.get("settings");
@@ -32,29 +32,46 @@ Respond with ONLY minified JSON, no prose, matching exactly:
 Set "screenshot" true only when the moment is visual (diagram, code, chart, on-screen text/formula) and a captured frame would meaningfully help. If nothing is worth noting, return {"notes":[]}.`;
 }
 
-async function callClaude({ apiKey, model, videoTitle, transcriptChunk, rangeStart, rangeEnd }) {
-  const res = await fetch(ANTHROPIC_URL, {
+async function callGemini({ apiKey, model, prompt, maxOutputTokens }) {
+  const url = `${GEMINI_URL_BASE}/${encodeURIComponent(model)}:generateContent`;
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
+      "x-goog-api-key": apiKey,
     },
     body: JSON.stringify({
-      model,
-      max_tokens: 512,
-      messages: [{ role: "user", content: buildPrompt(videoTitle, transcriptChunk, rangeStart, rangeEnd) }],
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: maxOutputTokens || 512,
+        temperature: 0.4,
+        responseMimeType: "application/json",
+      },
     }),
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`Anthropic API error ${res.status}: ${errText.slice(0, 300)}`);
+    throw new Error(`Gemini API error ${res.status}: ${errText.slice(0, 300)}`);
   }
 
   const data = await res.json();
-  const raw = (data.content || []).map((b) => b.text || "").join("").trim();
+  const candidate = (data.candidates || [])[0];
+  if (!candidate) {
+    const reason = data.promptFeedback?.blockReason;
+    throw new Error(reason ? `Gemini blocked the request: ${reason}` : "Gemini returned no candidates");
+  }
+  return (candidate.content?.parts || []).map((p) => p.text || "").join("").trim();
+}
+
+async function extractNotes({ apiKey, model, videoTitle, transcriptChunk, rangeStart, rangeEnd }) {
+  const raw = await callGemini({
+    apiKey,
+    model,
+    prompt: buildPrompt(videoTitle, transcriptChunk, rangeStart, rangeEnd),
+    maxOutputTokens: 512,
+  });
+
   const jsonStart = raw.indexOf("{");
   const jsonEnd = raw.lastIndexOf("}");
   if (jsonStart === -1 || jsonEnd === -1) throw new Error("AI response did not contain JSON");
@@ -78,7 +95,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           sendResponse({ ok: false, error: "NO_API_KEY" });
           return;
         }
-        const notes = await callClaude({
+        const notes = await extractNotes({
           apiKey: settings.apiKey,
           model: settings.model || DEFAULT_MODEL,
           videoTitle: message.videoTitle,
@@ -102,28 +119,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "VNAI_TEST_API_KEY") {
     (async () => {
       try {
-        const res = await fetch(ANTHROPIC_URL, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-api-key": message.apiKey,
-            "anthropic-version": "2023-06-01",
-            "anthropic-dangerous-direct-browser-access": "true",
-          },
-          body: JSON.stringify({
-            model: message.model || DEFAULT_MODEL,
-            max_tokens: 8,
-            messages: [{ role: "user", content: "Reply with OK." }],
-          }),
+        await callGemini({
+          apiKey: message.apiKey,
+          model: message.model || DEFAULT_MODEL,
+          prompt: "Reply with the single word OK.",
+          maxOutputTokens: 8,
         });
-        if (!res.ok) {
-          const t = await res.text().catch(() => "");
-          sendResponse({ ok: false, error: `HTTP ${res.status}: ${t.slice(0, 200)}` });
-          return;
-        }
         sendResponse({ ok: true });
       } catch (err) {
-        sendResponse({ ok: false, error: String(err) });
+        sendResponse({ ok: false, error: String(err && err.message ? err.message : err) });
       }
     })();
     return true;

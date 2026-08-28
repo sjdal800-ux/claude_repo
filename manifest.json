@@ -27,7 +27,7 @@
   "permissions": ["storage", "unlimitedStorage", "activeTab"],
   "host_permissions": [
     "https://www.youtube.com/*",
-    "https://api.anthropic.com/*"
+    "https://generativelanguage.googleapis.com/*"
   ],
   "content_scripts": [
     {

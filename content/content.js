@@ -11,7 +11,7 @@
     transcriptCues: null, // null = unknown/unavailable, [] = fetched but empty
     lastAiCheckTime: 0,
     aiBusy: false,
-    settings: { apiKey: "", model: "claude-sonnet-5", autoIntervalSeconds: 45, autoScreenshots: true, aiEnabled: true },
+    settings: { apiKey: "", model: "gemini-2.5-flash", autoIntervalSeconds: 45, autoScreenshots: true, aiEnabled: true },
     panelOpen: false,
     canvas: document.createElement("canvas"),
   };
@@ -317,7 +317,7 @@
       });
       if (!resp || !resp.ok) {
         if (resp && resp.error === "NO_API_KEY") {
-          setStatus("Add your Anthropic API key in Settings to enable AI notes.", true);
+          setStatus("Add your Gemini API key in Settings to enable AI notes.", true);
         } else {
           setStatus(`AI error: ${(resp && resp.error) || "unknown"}`, true);
         }
