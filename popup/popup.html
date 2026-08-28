@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="../icons/icon32.png" width="20" height="20" alt="" />
+      <span class="brand">Video Notes AI</span>
+      <button id="settingsBtn" class="icon-btn" title="Settings">⚙</button>
+    </header>
+
+    <section id="currentVideo" class="hidden">
+      <div class="section-label">This video</div>
+      <div class="current-card">
+        <div id="currentTitle" class="current-title"></div>
+        <div id="currentCount" class="current-count"></div>
+        <button id="openPanelBtn" class="btn primary">Open notes panel</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">All videos</div>
+      <div id="videoList" class="video-list"></div>
+    </section>
+
+    <footer>
+      <button id="backupBtn" class="btn">Backup all notes (.json)</button>
+    </footer>
+
+    <script src="../lib/db.js"></script>
+    <script src="../vendor/jspdf.umd.min.js"></script>
+    <script src="../lib/export.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
