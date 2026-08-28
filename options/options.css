@@ -42,6 +42,13 @@ header h1 {
 .hint a {
   color: #a5b4fc;
 }
+.hint code {
+  background: #0e0e12;
+  border: 1px solid #303038;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11.5px;
+}
 label {
   display: block;
   font-size: 12px;

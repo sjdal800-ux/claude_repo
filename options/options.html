@@ -18,7 +18,9 @@
           Auto AI notes call Gemini directly from your browser using your own API key — nothing goes through any
           third-party server. Get a free key at
           <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
-          Your key is stored only in this browser's local extension storage.
+          Your key is stored only in this browser's local extension storage. Prefer not to type it into a page at
+          all? You can instead set it in <code>background/config.js</code> (copy from
+          <code>background/config.example.js</code>) — that file is git-ignored so it's never committed.
         </p>
         <label for="apiKey">API key</label>
         <input id="apiKey" type="password" placeholder="AIza..." autocomplete="off" />

@@ -29,6 +29,11 @@ There's no backend server here — that's what keeps this free and keeps your no
 
 Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 
+**Two ways to set it:**
+
+1. **Settings page** (gear icon in the notes panel, or the popup) — paste your key, click Save. Stored in `chrome.storage.local`.
+2. **Local config file** — copy `background/config.example.js` to `background/config.js` and put your key in the `GEMINI_API_KEY` constant, then reload the extension. `background/config.js` is listed in `.gitignore`, so it's never committed or pushed — this is the option to use if you'd rather not go through a page at all, or if your browser is blocking the extension's own pages from loading (see Troubleshooting below). A key saved via the Settings page always takes priority over this file if both are set.
+
 ## Install (unpacked, for now — not yet published to the Chrome Web Store)
 
 1. Open `chrome://extensions`.
@@ -53,6 +58,10 @@ Requires a Chromium-based browser recent enough to support MV3 `"world": "MAIN"`
 - The auto-captured screenshot is taken from the current frame when the AI response comes back, which lags the flagged moment by a few seconds (network round-trip). Use the manual `📸 Capture` button for a screenshot at an exact moment.
 - Export destinations are "download to your machine" (Markdown/PDF/JSON) — from there, dragging into Notion/Drive/Obsidian/etc. is a normal file import, but there's no built-in cloud-sync integration yet.
 - Single browser only: notes are stored locally per-browser-profile, not synced across devices.
+
+## Troubleshooting
+
+- **Options page shows "blocked by Chrome" / `ERR_BLOCKED_BY_CLIENT`**: something else in the browser (an ad blocker, a privacy/security extension, or an organization's Chrome management policy) is blocking the extension's own page from loading — it's not a bug in this extension. Try disabling other extensions one at a time, or check `chrome://policy` for anything blocking developer-mode/unpacked extensions. If neither page will load, use the local config file (`background/config.js`) instead — it doesn't need any extension page to open at all.
 
 ## Privacy
 

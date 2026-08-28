@@ -5,15 +5,32 @@
 const GEMINI_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 const DEFAULT_MODEL = "gemini-2.5-flash";
 
+// Optional local override: background/config.js is git-ignored (see
+// .gitignore) so a key placed there never gets committed. Copy
+// background/config.example.js to background/config.js and fill in
+// GEMINI_API_KEY to skip the Settings page entirely. Loaded dynamically
+// (not a static import) so a missing file degrades gracefully instead of
+// breaking the whole service worker.
+let localConfigKeyPromise = null;
+function getLocalConfigKey() {
+  if (!localConfigKeyPromise) {
+    localConfigKeyPromise = import("./config.js")
+      .then((mod) => mod.GEMINI_API_KEY || "")
+      .catch(() => "");
+  }
+  return localConfigKeyPromise;
+}
+
 async function getSettings() {
   const { settings } = await chrome.storage.local.get("settings");
+  const stored = settings || {};
+  const localKey = await getLocalConfigKey();
   return {
-    apiKey: "",
-    model: DEFAULT_MODEL,
-    autoIntervalSeconds: 45,
-    autoScreenshots: true,
-    aiEnabled: true,
-    ...(settings || {}),
+    apiKey: (stored.apiKey && stored.apiKey.trim()) || localKey || "",
+    model: stored.model || DEFAULT_MODEL,
+    autoIntervalSeconds: stored.autoIntervalSeconds ?? 45,
+    autoScreenshots: stored.autoScreenshots ?? true,
+    aiEnabled: stored.aiEnabled ?? true,
   };
 }
 
